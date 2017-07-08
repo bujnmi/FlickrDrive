@@ -19,6 +19,7 @@ namespace FlickrDrive.Tasks
 
         public void Synchronize(Alive alive)
         {
+            CurrentAttempt++;
             var info = alive.FlickrInstance.PhotosGetInfo(photoId);
             
             using (var wc = new WebClient())
@@ -33,6 +34,8 @@ namespace FlickrDrive.Tasks
             }
             IsDone = true;
         }
+
+        public int CurrentAttempt { get; set; }
         public bool IsDone { get; set; }
 
     }

@@ -9,5 +9,7 @@
         public const string ProgramName = "FlickrDrive";
         public const string DelimiterInWindowsPath = "\\";
         public const string DelimiterExtension = ".";
+        public const int MaxAttemptCount = 10;
+        public const int MaxPerPage = 500;
     }
 }

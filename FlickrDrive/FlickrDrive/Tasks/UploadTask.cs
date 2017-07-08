@@ -23,6 +23,7 @@ namespace FlickrDrive.Tasks
         }
         public void Synchronize(Alive alive)
         {
+            CurrentAttempt++;
             string photoId;
             using (FileStream fs = new FileStream(photoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -44,6 +45,8 @@ namespace FlickrDrive.Tasks
             alive.FlickrInstance.PhotosetsAddPhoto(AlbumId, photoId);
             IsDone = true;
         }
+
+        public int CurrentAttempt { get; set; }
         public string AlbumTitle { get; }
         public bool IsDone { get; set; }
 

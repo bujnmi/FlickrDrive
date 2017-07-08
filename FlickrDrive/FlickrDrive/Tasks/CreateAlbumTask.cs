@@ -17,6 +17,7 @@ namespace FlickrDrive.Tasks
 
         public void Synchronize(Alive alive)
         {
+            CurrentAttempt++;
             string photoId;
             using (FileStream fs = new FileStream(primaryPhotoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -36,6 +37,8 @@ namespace FlickrDrive.Tasks
             PostAction?.Invoke();
             IsDone = true;
         }
+
+        public int CurrentAttempt { get; set; }
 
         public bool IsDone { get; set; }
         public string AlbumTitle { get; }

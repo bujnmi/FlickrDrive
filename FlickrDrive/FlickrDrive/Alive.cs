@@ -31,7 +31,10 @@ namespace FlickrDrive
                     _root = value;
                     Settings.Default.RootPath = value;
                     Settings.Default.Save();
-                    UpdateMeta();
+                    Task.Run(() =>
+                    {
+                        UpdateMeta();
+                    });
                 }
                 _root = value;
                 OnPropertyChanged();
@@ -213,19 +216,24 @@ namespace FlickrDrive
             Task.Run(() =>
             {
                 IsSynchronizing = true;
-                foreach (var synchronizationTask in SynchronizationTasks)
+
+                while (SynchronizationTasks.Count(t => !t.IsDone && t.CurrentAttempt<Constants.MaxAttemptCount) > 0)
                 {
-                    OnPropertyChanged(nameof(SynchronizationTasksDoneCount));
-                    OnPropertyChanged(nameof(SynchronizationProgressString));
-                    try
+                    foreach (var synchronizationTask in SynchronizationTasks.Where(t=>!t.IsDone && t.CurrentAttempt < Constants.MaxAttemptCount))
                     {
-                        synchronizationTask.Synchronize(this);
-                    }
-                    catch (Exception)
-                    {
-                        
+                        OnPropertyChanged(nameof(SynchronizationTasksDoneCount));
+                        OnPropertyChanged(nameof(SynchronizationProgressString));
+                        try
+                        {
+                            synchronizationTask.Synchronize(this);
+                        }
+                        catch (Exception)
+                        {
+
+                        }
                     }
                 }
+                
                 IsSynchronizing = false;
                 SynchronizationTasks.Clear();
                 UpdateMeta();
@@ -263,17 +271,26 @@ namespace FlickrDrive
                 }
                 else
                 {
+                    var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
+                    var photosString = photos.Select(p => p.Title).ToList();
+                    for (int i = 2; i <= Math.Ceiling((double)photos.Total/Constants.MaxPerPage); i++)
+                    {
+                            photosString.AddRange(FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
+                                PrivacyFilter.None, i,
+                                Constants.MaxPerPage).Select(p => p.Title));
+                                    
+                    }
+
                     var files = Directory.GetFiles(testedDirectory).FilterPhotos().Select(Path.GetFileNameWithoutExtension);
-                    var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId).Select(p => p.Title);
                     foreach (var file in files)
                     {
-                        if (!photos.Contains(file))
+                        if (!photosString.Contains(file))
                         {
                             setx.Up++;
                         }
                     }
 
-                    foreach (var photo in photos)
+                    foreach (var photo in photosString)
                     {
                         if (!files.Contains(photo))
                         {
@@ -313,24 +330,39 @@ namespace FlickrDrive
 
         private void SynchronizeExistingDirectory(Photoset set, string directory)
         {
-            var existingPhotos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
             var localFiles = Directory.GetFiles(directory).FilterPhotos();
+            var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
+            for (int i = 2; i <= Math.Ceiling((double)photos.Total / Constants.MaxPerPage); i++)
+            {
+
+                    var ph = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
+                        PrivacyFilter.None, i,
+                        Constants.MaxPerPage);
+                    foreach (var p in ph)
+                    {
+                        photos.Add(p);
+                    }
+                
+            }
+
             foreach (var file in localFiles)
             {
-                if (existingPhotos.FirstOrDefault(p => p.Title == Path.GetFileNameWithoutExtension(file)) == null)
+                if (photos.FirstOrDefault(p => p.Title == Path.GetFileNameWithoutExtension(file)) == null)
                 {
                     var task = new UploadTask(file, set.PhotosetId, set.Title);
                     SynchronizationTasks.Add(task);
                 }
             }
-            foreach (var photo in existingPhotos)
+            foreach (var photo in photos)
             {
                 if (localFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == photo.Title) == null)
                 {
-                    var task = new DownloadTask(photo.PhotoId,directory,set.Title);
+                    var task = new DownloadTask(photo.PhotoId, directory, set.Title);
                     SynchronizationTasks.Add(task);
                 }
             }
+
+
         }
 
         private void SynchronizeNewDirectoryUp(string directory)
