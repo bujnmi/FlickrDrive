@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
 using FlickrDrive.Properties;
 using FlickrDrive.Tasks;
 using FlickrNet;
@@ -58,10 +59,10 @@ namespace FlickrDrive
 
         private BasicSecurity _basicSecurity;
         private bool _isSynchronizing;
-        private SynchronizedObservableCollection<SynchroSet> _allSynchroSets;
+        private ObservableCollection<SynchroSet> _allSynchroSets;
         private string _root;
 
-        public SynchronizedObservableCollection<SynchroSet> AllSynchroSets
+        public ObservableCollection<SynchroSet> AllSynchroSets
         {
             get { return _allSynchroSets; }
             set
@@ -104,14 +105,15 @@ namespace FlickrDrive
             IsSynchronizing = false;
 
         }
-
+        private object sync = new object();
         public Alive()
         {
             CancelActions = new List<Action>();
             _basicSecurity = new BasicSecurity();
             FlickrInstance = new Flickr(Constants.KEY, Constants.SECRET);
             FlickrData = new FlickrData();
-            AllSynchroSets = new SynchronizedObservableCollection<SynchroSet>();
+            AllSynchroSets = new ObservableCollection<SynchroSet>();
+            BindingOperations.EnableCollectionSynchronization(AllSynchroSets, sync);
             SynchronizationTasks = new List<ISynchronizeTask>();
         }
 
@@ -233,8 +235,8 @@ namespace FlickrDrive
 
         public void UpdateMeta()
         {
-            //clear old
             AllSynchroSets.Clear();
+            //clear old
             FlickrData.Sets = FlickrInstance.PhotosetsGetList();
             EnsureDirectoryExist(Root);
 
@@ -281,8 +283,7 @@ namespace FlickrDrive
                 }
                 AllSynchroSets.Add(setx);
             }
-
-           
+          
             OnPropertyChanged(nameof(TasksString));
 
         }
