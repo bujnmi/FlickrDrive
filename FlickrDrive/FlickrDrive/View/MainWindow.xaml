@@ -1,0 +1,77 @@
+﻿<Window x:Class="FlickrDrive.View.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+        mc:Ignorable="d"
+      DataContext="{Binding Main, Source={StaticResource Locator}}"
+        Title="FlickrDrive" Height="600" Width="800">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <DockPanel>
+            <Menu Width="Auto" Height="20" Background="LightGray" DockPanel.Dock="Top">
+                <MenuItem Header="_Settings">
+                    <MenuItem Header="Settings"  />
+                    <Separator />
+                    <MenuItem Header="{Binding LoginString}" Command="{Binding LoginLogoutCommand}" />
+                </MenuItem>
+            </Menu>
+        </DockPanel>
+        <Grid  Grid.RowSpan="1" Grid.Row="1" >
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="32"/>
+
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="20*"/>
+                <ColumnDefinition Width="60*"/>
+                <ColumnDefinition Width="20*"/>
+                <ColumnDefinition Width="20*"/>
+
+            </Grid.ColumnDefinitions>
+            <TextBlock TextWrapping="Wrap" TextAlignment="Center" Text="path to sync folder (change by click)" Grid.ColumnSpan="1"  Grid.RowSpan="1" ></TextBlock>
+            <TextBlock Text="{Binding Alive.Root}"  Grid.ColumnSpan="1" Grid.Column="1" Grid.RowSpan="1" >
+                 <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseLeftButtonUp" >
+          <i:InvokeCommandAction Command="{Binding ChangeRootCommand}" />
+        </i:EventTrigger>
+      </i:Interaction.Triggers>
+            </TextBlock>
+            <Button Content="Refresh" Command="{Binding RefreshCommand}" Grid.Column="2"  Grid.RowSpan="1" ></Button>
+
+            <Button Content="Open folder" Command="{Binding OpenFolderCommand}" Grid.Column="3"  Grid.RowSpan="1" ></Button>
+
+            <ListBox VerticalAlignment="Stretch" ItemsSource="{Binding Alive.AllSynchroSets}" Grid.Row="1" Grid.ColumnSpan="5">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <CheckBox IsEnabled="{Binding IsSynchronizationNeeded}" IsChecked="{Binding IsSynchronizationRequested, Mode=TwoWay}"></CheckBox>
+                            <TextBlock Margin="12,0,0,0" Text="{Binding Title}" Width="160"></TextBlock>
+                            <TextBlock Margin="12,0,0,0" Text="{Binding NumberOfPhotosString}" Width="70"></TextBlock>
+                            <TextBlock Margin="24,0,0,0" Text="Up:"></TextBlock>
+                            <TextBlock Margin="12,0,0,0" Text="{Binding Up}" Width="40"></TextBlock>
+                            <TextBlock Margin="12,0,0,0" Text="Down:"></TextBlock>
+                            <TextBlock Margin="12,0,0,0" Text="{Binding Down}" Width="40"></TextBlock>
+
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <ProgressBar  Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Height="6" Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}" Maximum="{Binding Alive.SynchronizationTasksCount}" Minimum="0" Value="{Binding Alive.SynchronizationTasksDoneCount, Mode=OneWay}"></ProgressBar>
+            <TextBlock Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}"  Text="{Binding Alive.SynchronizationProgressString}" TextWrapping="Wrap"  Grid.Row="2" Grid.Column="2"></TextBlock>
+            <TextBlock Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource InvertedBooleanToVisibility}}"  Text="{Binding Alive.TasksString}" TextWrapping="Wrap"  Grid.Row="2" Grid.Column="2"></TextBlock>
+
+            <Button Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource InvertedBooleanToVisibility}}"  Content="Synchronize" Command="{Binding SynchronizeCommand}" Grid.Row="2" Grid.Column="3" ></Button>
+
+            <Button Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}" Content="Stop" Command="{Binding StopCommand}" Grid.Row="2" Grid.Column="3"></Button>
+        </Grid>
+    </Grid>
+</Window>
