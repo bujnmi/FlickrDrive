@@ -92,6 +92,7 @@
     <Compile Include="Converters\InvertedBoolean.cs" />
     <Compile Include="Converters\InvertedBooleanToVisibility.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="SynchronizedObservableCollection.cs" />
     <Compile Include="SynchroSet.cs" />
     <Compile Include="Tasks\CreateAlbumTask.cs" />
     <Compile Include="Tasks\DownloadTask.cs" />

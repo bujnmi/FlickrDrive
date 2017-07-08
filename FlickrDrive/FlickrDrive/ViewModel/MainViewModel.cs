@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using FlickrDrive.Annotations;
 using GalaSoft.MvvmLight.Command;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -61,7 +62,10 @@ namespace FlickrDrive.ViewModel
 
         private void Refresh()
         {
-            _alive.UpdateMeta();
+            Task.Run(() =>
+            {
+                _alive.UpdateMeta();
+            });
         }
 
         private void OpenFolder()

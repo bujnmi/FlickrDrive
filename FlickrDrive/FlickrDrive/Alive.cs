@@ -58,13 +58,17 @@ namespace FlickrDrive
 
         private BasicSecurity _basicSecurity;
         private bool _isSynchronizing;
-        private ObservableCollection<SynchroSet> _allSynchroSets;
+        private SynchronizedObservableCollection<SynchroSet> _allSynchroSets;
         private string _root;
 
-        public ObservableCollection<SynchroSet> AllSynchroSets
+        public SynchronizedObservableCollection<SynchroSet> AllSynchroSets
         {
             get { return _allSynchroSets; }
-            set { _allSynchroSets = value; }
+            set
+            {
+                _allSynchroSets = value;
+                OnPropertyChanged();
+            }
         }
 
         private List<ISynchronizeTask> SynchronizationTasks { get; set; }
@@ -107,7 +111,7 @@ namespace FlickrDrive
             _basicSecurity = new BasicSecurity();
             FlickrInstance = new Flickr(Constants.KEY, Constants.SECRET);
             FlickrData = new FlickrData();
-            AllSynchroSets = new ObservableCollection<SynchroSet>();
+            AllSynchroSets = new SynchronizedObservableCollection<SynchroSet>();
             SynchronizationTasks = new List<ISynchronizeTask>();
         }
 
@@ -229,9 +233,23 @@ namespace FlickrDrive
 
         public void UpdateMeta()
         {
-            var newSynchroSet = new List<SynchroSet>();
+            //clear old
+            AllSynchroSets.Clear();
             FlickrData.Sets = FlickrInstance.PhotosetsGetList();
             EnsureDirectoryExist(Root);
+
+            var Directories = Directory.GetDirectories(Root);
+            foreach (var directory in Directories)
+            {
+                var directoryName = Path.GetFileName(directory);
+
+                if (FlickrData.Sets.FirstOrDefault(s => s.Title == directoryName) == null)
+                {
+                    var setx = new SynchroSet(directoryName, this);
+                    setx.Up = Directory.GetFiles(directory).FilterPhotos().Count();
+                    AllSynchroSets.Add(setx);
+                }
+            }
 
             foreach (var set in FlickrData.Sets)
             {
@@ -261,23 +279,10 @@ namespace FlickrDrive
                         }
                     }
                 }
-                newSynchroSet.Add(setx);
+                AllSynchroSets.Add(setx);
             }
 
-            var Directories = Directory.GetDirectories(Root);
-            foreach (var directory in Directories)
-            {
-                var directoryName = Path.GetFileName(directory);
-
-                if (FlickrData.Sets.FirstOrDefault(s => s.Title == directoryName) == null)
-                {
-                    var setx = new SynchroSet(directoryName, this);
-                    setx.Up = Directory.GetFiles(directory).FilterPhotos().Count();
-                    newSynchroSet.Add(setx);
-                }
-            }
-            AllSynchroSets = new ObservableCollection<SynchroSet>(newSynchroSet);
-            OnPropertyChanged(nameof(AllSynchroSets));
+           
             OnPropertyChanged(nameof(TasksString));
 
         }
