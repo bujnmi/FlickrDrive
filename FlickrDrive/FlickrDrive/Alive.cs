@@ -280,15 +280,7 @@ namespace FlickrDrive
                 }
                 else
                 {
-                    var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
-                    var photosString = photos.Select(p => p.Title).ToList();
-                    for (int i = 2; i <= Math.Ceiling((double)photos.Total / Constants.MaxPerPage); i++)
-                    {
-                        photosString.AddRange(FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
-                            PrivacyFilter.None, i,
-                            Constants.MaxPerPage).Select(p => p.Title));
-
-                    }
+                    var photosString = GetAllPhotos(set).Select(p=>p.Title);
 
                     var files = Directory.GetFiles(testedDirectory).FilterPhotos().Select(Path.GetFileNameWithoutExtension);
                     foreach (var file in files)
@@ -313,6 +305,20 @@ namespace FlickrDrive
             OnPropertyChanged(nameof(TasksString));
 
         }
+
+        private List<Photo> GetAllPhotos(Photoset set)
+        {
+            var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
+            var photosList = photos.ToList();
+            for (int i = 2; i <= Math.Ceiling((double) photos.Total/Constants.MaxPerPage); i++)
+            {
+                photosList.AddRange(FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
+                    PrivacyFilter.None, i,
+                    Constants.MaxPerPage));
+            }
+            return photosList;
+        }
+
         public void AddSynchronizeSet(SynchroSet synchroSet)
         {
             string directory = Root + Constants.DelimiterInWindowsPath + synchroSet.Title;
@@ -431,23 +437,26 @@ namespace FlickrDrive
 
         public void AddPermToSynchroSet(SynchroSet synchroSet)
         {
-            Action a = new Action(() =>
+            PermissionTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Title);
+
+            Action preSynchroAction = () =>
             {
                 FlickrData.Sets = FlickrInstance.PhotosetsGetList();
-                
+            };
+            PermissionTasks.Add(new ActionTask(preSynchroAction, synchroSet.Title));
+
+            List<Photo> photos = null;
+            Action changePermissionAction = new Action(() =>
+            {              
                 var set = FlickrData.Sets.First(s => s.Title == synchroSet.Title);
-                var photos =
-                    FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
+                photos = GetAllPhotos(set);
                 foreach (var photo in photos)
                 {
-                    FlickrInstance.PhotosSetPerms(photo.PhotoId, synchroSet.IsPublic, photo.IsFriend, synchroSet.IsFamily, PermissionComment.Nobody, PermissionAddMeta.Owner);
+                    FlickrInstance.PhotosSetPerms(photo.PhotoId, synchroSet.IsPublic, photo.IsFriend, synchroSet.IsFamily, PermissionComment.FriendsAndFamily, PermissionAddMeta.Owner);
                 }
             });
-
-            var atask = new ActionTask(a, synchroSet.Title);
-            PermissionTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Title);
-            PermissionTasks.Add(atask);
-
+            PermissionTasks.Add(new ActionTask(changePermissionAction, synchroSet.Title));
+            
             OnPropertyChanged(nameof(SynchronizationTasksCount));
             OnPropertyChanged(nameof(TasksString));
         }
