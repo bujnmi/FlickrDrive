@@ -18,9 +18,8 @@ namespace FlickrDrive.Tasks
         }
 
 
-        public override void Synchronize(Alive alive)
+        public override void SynchronizeImplementation(Alive alive)
         {
-            CurrentAttempt++;
             var info = alive.FlickrInstance.PhotosGetInfo(photoId);
             
             using (var wc = new WebClient())
@@ -33,7 +32,6 @@ namespace FlickrDrive.Tasks
                 wc.DownloadFile(info.OriginalUrl, directoryPath+Constants.DelimiterInWindowsPath+info.Title+Constants.DelimiterExtension+info.OriginalFormat);
                 alive.CancelActions.Remove(a);
             }
-            IsDone = true;
         }
 
     }

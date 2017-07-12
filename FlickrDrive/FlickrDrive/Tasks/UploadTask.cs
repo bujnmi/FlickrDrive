@@ -24,9 +24,8 @@ namespace FlickrDrive.Tasks
             this.AlbumId = albumID;
             AlbumTitle = albumTitle;
         }
-        public override void Synchronize(Alive alive)
+        public override void SynchronizeImplementation(Alive alive)
         {
-            CurrentAttempt++;
             string photoId;
             using (FileStream fs = new FileStream(photoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -46,7 +45,6 @@ namespace FlickrDrive.Tasks
                 throw new Exception("AlbumId is not specified.");
             }
             alive.FlickrInstance.PhotosetsAddPhoto(AlbumId, photoId);
-            IsDone = true;
         }
 
 

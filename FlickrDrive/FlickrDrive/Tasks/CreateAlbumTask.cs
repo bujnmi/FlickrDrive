@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using FlickrNet;
 
 namespace FlickrDrive.Tasks
@@ -18,9 +19,8 @@ namespace FlickrDrive.Tasks
             AlbumTitle = albumTitle;
         }
 
-        public override void Synchronize(Alive alive)
+        public override void SynchronizeImplementation(Alive alive)
         {
-            CurrentAttempt++;
             string photoId;
             using (FileStream fs = new FileStream(primaryPhotoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -38,7 +38,6 @@ namespace FlickrDrive.Tasks
             var set = alive.FlickrInstance.PhotosetsCreate(AlbumTitle, photoId);
             AlbumId = set.PhotosetId;
             PostAction?.Invoke();
-            IsDone = true;
         }
 
     }

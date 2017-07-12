@@ -91,8 +91,13 @@
     <Compile Include="Converters\BytesToHumanString.cs" />
     <Compile Include="Converters\InvertedBoolean.cs" />
     <Compile Include="Converters\InvertedBooleanToVisibility.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="SynchroSet.cs" />
+    <Compile Include="Tasks\ActionTask.cs" />
     <Compile Include="Tasks\CreateAlbumTask.cs" />
     <Compile Include="Tasks\DownloadTask.cs" />
     <Compile Include="Tasks\SynchronizeTask.cs" />
@@ -102,10 +107,6 @@
     <Compile Include="View\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Compile>
-    <Page Include="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
     <Compile Include="Alive.cs" />
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
@@ -115,10 +116,10 @@
     <Compile Include="BasicSecurity.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="FlickrData.cs" />
-    <Compile Include="MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

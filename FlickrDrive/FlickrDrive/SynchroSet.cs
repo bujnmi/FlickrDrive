@@ -1,23 +1,60 @@
 ﻿using System.Linq;
+using FlickrNet;
 
 namespace FlickrDrive
 {
     public class SynchroSet:BaseNotifyObject
     {
-        
-        private readonly Alive _alive;
-        public SynchroSet(string path, Alive alive)
+        public bool IsFamily
         {
-            Path = path;
+            get { return _isFamily; }
+            set
+            {
+                _isFamily = value;
+                _alive.AddPermToSynchroSet(this);
+            }
+        }
+
+        public bool IsPublic
+        {
+            get { return _isPublic; }
+            set
+            {
+                _isPublic = value;
+                _alive.AddPermToSynchroSet(this);
+
+            }
+        }
+
+        public bool IsSearchable
+        {
+            get { return _isSearchable; }
+            set
+            {
+                _isSearchable = value;
+                _alive.AddPermToSynchroSet(this);
+
+            }
+        }
+
+        public Photo PrimaryPhotoData;
+        private readonly Alive _alive;
+        public SynchroSet(string title, Alive alive)
+        {
+            Title = title;
             _alive = alive;
         }
 
         private int _up;
         private int _down;
         private bool _isSynchronizationRequested;
-        public string Path { get; set; }
+        public string Title { get; set; }
 
         public string DirectoryPath;
+        public bool _isFamily;
+        public bool _isPublic;
+        public bool _isSearchable;
+
         public int Up
         {
             get { return _up; }
@@ -47,7 +84,7 @@ namespace FlickrDrive
             get
             {
                 var count = Up;
-                var set = _alive.FlickrData.Sets.FirstOrDefault(s => s.Title == this.Path);
+                var set = _alive.FlickrData.Sets.FirstOrDefault(s => s.Title == this.Title);
                 if (set != null)
                 {
                     count += set.NumberOfPhotos;
