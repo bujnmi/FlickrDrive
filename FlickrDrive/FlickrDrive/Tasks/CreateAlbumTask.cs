@@ -4,18 +4,21 @@ using FlickrNet;
 
 namespace FlickrDrive.Tasks
 {
-    public class CreateAlbumTask : ISynchronizeTask
+    public class CreateAlbumTask : SynchronizeTask
     {
         public Action PostAction;
         private readonly string primaryPhotoPath;
         public string AlbumId;
+
+        public override bool ContainsSynchronizationOfPhoto => true;
+
         public CreateAlbumTask(string primaryPhotoPath, string albumTitle)
         {
             this.primaryPhotoPath = primaryPhotoPath;
             AlbumTitle = albumTitle;
         }
 
-        public void Synchronize(Alive alive)
+        public override void Synchronize(Alive alive)
         {
             CurrentAttempt++;
             string photoId;
@@ -37,11 +40,6 @@ namespace FlickrDrive.Tasks
             PostAction?.Invoke();
             IsDone = true;
         }
-
-        public int CurrentAttempt { get; set; }
-
-        public bool IsDone { get; set; }
-        public string AlbumTitle { get; }
 
     }
 }

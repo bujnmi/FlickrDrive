@@ -75,7 +75,7 @@ namespace FlickrDrive
             }
         }
 
-        private List<ISynchronizeTask> SynchronizationTasks { get; set; }
+        private List<SynchronizeTask> SynchronizationTasks { get; set; }
 
         public int SynchronizationTasksCount
         {
@@ -117,7 +117,7 @@ namespace FlickrDrive
             FlickrData = new FlickrData();
             AllSynchroSets = new ObservableCollection<SynchroSet>();
             BindingOperations.EnableCollectionSynchronization(AllSynchroSets, sync);
-            SynchronizationTasks = new List<ISynchronizeTask>();
+            SynchronizationTasks = new List<SynchronizeTask>();
         }
 
         public void Initialize()
@@ -249,67 +249,80 @@ namespace FlickrDrive
             EnsureDirectoryExist(Root);
 
             var Directories = Directory.GetDirectories(Root);
-            foreach (var directory in Directories)
-            {
-                var directoryName = Path.GetFileName(directory);
 
-                if (FlickrData.Sets.FirstOrDefault(s => s.Title == directoryName) == null)
-                {
-                    var setx = new SynchroSet(directoryName, this);
-                    setx.Up = Directory.GetFiles(directory).FilterPhotos().Count();
-                    AllSynchroSets.Add(setx);
-                }
-            }
-
-            foreach (var set in FlickrData.Sets)
+            for (int nesting = 1; nesting < 5; nesting++)
             {
-                var setx = new SynchroSet(set.Title, this);
-                var testedDirectory = Root + Constants.DelimiterInWindowsPath + set.Title;
-                if (!Directory.Exists(testedDirectory))
+                if (Directories.Any())
                 {
-                    setx.Down = set.NumberOfPhotos;
+                    //is collection
+
                 }
                 else
                 {
-                    var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
-                    var photosString = photos.Select(p => p.Title).ToList();
-                    for (int i = 2; i <= Math.Ceiling((double)photos.Total/Constants.MaxPerPage); i++)
+                    foreach (var directory in Directories)
                     {
-                            photosString.AddRange(FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
-                                PrivacyFilter.None, i,
-                                Constants.MaxPerPage).Select(p => p.Title));
-                                    
-                    }
+                        var directoryName = Path.GetFileName(directory);
 
-                    var files = Directory.GetFiles(testedDirectory).FilterPhotos().Select(Path.GetFileNameWithoutExtension);
-                    foreach (var file in files)
-                    {
-                        if (!photosString.Contains(file))
+                        if (FlickrData.Sets.FirstOrDefault(s => s.Title == directoryName) == null)
                         {
-                            setx.Up++;
+                            var setx = new SynchroSet(directoryName, this);
+                            setx.Up = Directory.GetFiles(directory).FilterPhotos().Count();
+                            AllSynchroSets.Add(setx);
                         }
                     }
 
-                    foreach (var photo in photosString)
+                    foreach (var set in FlickrData.Sets)
                     {
-                        if (!files.Contains(photo))
+                        var setx = new SynchroSet(set.Title, this);
+                        var testedDirectory = Root + Constants.DelimiterInWindowsPath + set.Title;
+                        if (!Directory.Exists(testedDirectory))
                         {
-                            setx.Down++;
+                            setx.Down = set.NumberOfPhotos;
                         }
+                        else
+                        {
+                            var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
+                            var photosString = photos.Select(p => p.Title).ToList();
+                            for (int i = 2; i <= Math.Ceiling((double)photos.Total / Constants.MaxPerPage); i++)
+                            {
+                                photosString.AddRange(FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
+                                    PrivacyFilter.None, i,
+                                    Constants.MaxPerPage).Select(p => p.Title));
+
+                            }
+
+                            var files = Directory.GetFiles(testedDirectory).FilterPhotos().Select(Path.GetFileNameWithoutExtension);
+                            foreach (var file in files)
+                            {
+                                if (!photosString.Contains(file))
+                                {
+                                    setx.Up++;
+                                }
+                            }
+
+                            foreach (var photo in photosString)
+                            {
+                                if (!files.Contains(photo))
+                                {
+                                    setx.Down++;
+                                }
+                            }
+                        }
+                        AllSynchroSets.Add(setx);
                     }
                 }
-                AllSynchroSets.Add(setx);
             }
+            
           
             OnPropertyChanged(nameof(TasksString));
 
         }
         public void AddSynchronizeSet(SynchroSet synchroSet)
         {
-            string directory = Root + Constants.DelimiterInWindowsPath + synchroSet.Title;
+            string directory = Root + Constants.DelimiterInWindowsPath + synchroSet.Path;
             EnsureDirectoryExist(directory);
 
-            var set = FlickrData.Sets.FirstOrDefault(i => i.Title == synchroSet.Title);
+            var set = FlickrData.Sets.FirstOrDefault(i => i.Title == synchroSet.Path);
             if (set == null)
             {
                 //create new album, only if there is at least one photo
@@ -402,7 +415,7 @@ namespace FlickrDrive
 
         public void RemoveSynchronizationOfSet(SynchroSet synchroSet)
         {
-            SynchronizationTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Title);            
+            SynchronizationTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Path);            
             OnPropertyChanged(nameof(SynchronizationTasksCount));
             OnPropertyChanged(nameof(TasksString));
 

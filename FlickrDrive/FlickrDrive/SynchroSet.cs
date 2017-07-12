@@ -6,16 +6,16 @@ namespace FlickrDrive
     {
         
         private readonly Alive _alive;
-        public SynchroSet(string title, Alive alive)
+        public SynchroSet(string path, Alive alive)
         {
-            Title = title;
+            Path = path;
             _alive = alive;
         }
 
         private int _up;
         private int _down;
         private bool _isSynchronizationRequested;
-        public string Title { get; set; }
+        public string Path { get; set; }
 
         public string DirectoryPath;
         public int Up
@@ -47,7 +47,7 @@ namespace FlickrDrive
             get
             {
                 var count = Up;
-                var set = _alive.FlickrData.Sets.FirstOrDefault(s => s.Title == this.Title);
+                var set = _alive.FlickrData.Sets.FirstOrDefault(s => s.Title == this.Path);
                 if (set != null)
                 {
                     count += set.NumberOfPhotos;

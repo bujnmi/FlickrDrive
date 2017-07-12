@@ -3,10 +3,12 @@ using System.Net;
 
 namespace FlickrDrive.Tasks
 {
-    public class DownloadTask:ISynchronizeTask
+    public class DownloadTask:SynchronizeTask
     {
         private readonly string photoId;
         private readonly string directoryPath;
+
+        public override bool ContainsSynchronizationOfPhoto => true;
 
         public DownloadTask(string photoId, string directoryPath, string albumTitle)
         {
@@ -15,9 +17,8 @@ namespace FlickrDrive.Tasks
             this.AlbumTitle = albumTitle;
         }
 
-        public string AlbumTitle { get; }
 
-        public void Synchronize(Alive alive)
+        public override void Synchronize(Alive alive)
         {
             CurrentAttempt++;
             var info = alive.FlickrInstance.PhotosGetInfo(photoId);
@@ -34,9 +35,6 @@ namespace FlickrDrive.Tasks
             }
             IsDone = true;
         }
-
-        public int CurrentAttempt { get; set; }
-        public bool IsDone { get; set; }
 
     }
 }
