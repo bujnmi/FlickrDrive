@@ -37,6 +37,23 @@ namespace FlickrDrive
             }
         }
 
+        public bool IsReorderPhotosRequested
+        {
+            get { return _isReorderPhotosRequested; }
+            set
+            {
+                _isReorderPhotosRequested = value;
+                if (value)
+                {
+                    _alive.AddReorderPhotosByDataTaken(this);
+                }
+                else
+                {
+                    _alive.RemoveReorderPhotosByDataTaken(this);
+                }
+            }
+        }
+
         public Photo PrimaryPhotoData;
         private readonly Alive _alive;
         public SynchroSet(string title, Alive alive)
@@ -54,6 +71,7 @@ namespace FlickrDrive
         public bool _isFamily;
         public bool _isPublic;
         public bool _isSearchable;
+        private bool _isReorderPhotosRequested;
 
         public int Up
         {
@@ -108,6 +126,7 @@ namespace FlickrDrive
                 {
                     _alive.RemoveSynchronizationOfSet(this);
                 }
+                IsReorderPhotosRequested = value;
             }
         }
     }

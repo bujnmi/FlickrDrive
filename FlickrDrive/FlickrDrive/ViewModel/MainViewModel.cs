@@ -17,6 +17,7 @@ namespace FlickrDrive.ViewModel
         private RelayCommand _refreshCommand;
         private RelayCommand _changeRootCommand;
         private RelayCommand _logoutCommand;
+        private RelayCommand _reorderSetsCommand;
         public Alive Alive { get { return _alive; } }
 
         public MainViewModel(Alive alive)
@@ -123,6 +124,14 @@ namespace FlickrDrive.ViewModel
             }
         }
 
+        public RelayCommand ReorderSetsCommand
+        {
+            get
+            {
+                return _reorderSetsCommand ?? (_reorderSetsCommand = new RelayCommand(ReorderSets));
+            }
+        }
+
         private void ChangeRoot()
         {
             CommonOpenFileDialog dialog = new CommonOpenFileDialog();
@@ -138,6 +147,10 @@ namespace FlickrDrive.ViewModel
             _alive.Synchronize();
         }
 
+        private void ReorderSets()
+        {
+            _alive.ReorderSets();
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

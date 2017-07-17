@@ -27,6 +27,7 @@
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="32"/>
+                <RowDefinition Height="6"/>
 
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -63,6 +64,8 @@
                             <CheckBox Margin="12,0,0,0" IsChecked="{Binding IsFamily, Mode=TwoWay}"></CheckBox>
                             <TextBlock Margin="12,0,0,0" Text="Public"></TextBlock>
                             <CheckBox Margin="12,0,0,0" IsChecked="{Binding IsPublic, Mode=TwoWay}"></CheckBox>
+                            <TextBlock Margin="12,0,0,0" Text="Reorder photos"></TextBlock>
+                            <CheckBox Margin="12,0,0,0" IsChecked="{Binding IsReorderPhotosRequested, Mode=TwoWay}"></CheckBox>
 
 
                         </StackPanel>
@@ -70,13 +73,15 @@
                 </ListBox.ItemTemplate>
             </ListBox>
 
-            <ProgressBar  Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Bottom" Height="6" Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}" Maximum="{Binding Alive.SynchronizationTasksCount}" Minimum="0" Value="{Binding Alive.SynchronizationTasksDoneCount, Mode=OneWay}"></ProgressBar>
+            <ProgressBar  Grid.Row="3" Grid.ColumnSpan="3" VerticalAlignment="Bottom" Height="6" Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}" Maximum="{Binding Alive.SynchronizationTasksCount}" Minimum="0" Value="{Binding Alive.SynchronizationTasksDoneCount, Mode=OneWay}"></ProgressBar>
             <TextBlock Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}"  Text="{Binding Alive.SynchronizationProgressString}" TextWrapping="Wrap"  Grid.Row="2" Grid.Column="2"></TextBlock>
             <TextBlock Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource InvertedBooleanToVisibility}}"  Text="{Binding Alive.TasksString}" TextWrapping="Wrap"  Grid.Row="2" Grid.Column="2"></TextBlock>
 
             <Button Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource InvertedBooleanToVisibility}}"  Content="Synchronize" Command="{Binding SynchronizeCommand}" Grid.Row="2" Grid.Column="3" ></Button>
 
             <Button Visibility="{Binding Alive.IsSynchronizing, Converter={StaticResource BooleanToVisibility}}" Content="Stop" Command="{Binding StopCommand}" Grid.Row="2" Grid.Column="3"></Button>
+            <Button  Content="Reorder sets" Command="{Binding ReorderSetsCommand}" Grid.Row="2" Grid.Column="0"></Button>
+
         </Grid>
     </Grid>
 </Window>

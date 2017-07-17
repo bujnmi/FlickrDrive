@@ -75,17 +75,19 @@ namespace FlickrDrive
             }
         }
 
+        private List<SynchronizeTask> ReOrderTasks = new List<SynchronizeTask>();
+
         private List<SynchronizeTask> PermissionTasks = new List<SynchronizeTask>();
-        private List<SynchronizeTask> SynchronizationTasks { get; set; }
+        private List<SynchronizeTask> PhotoTasks { get; set; }
 
         public int SynchronizationTasksCount
         {
-            get { return SynchronizationTasks.Count; }
+            get { return PhotoTasks.Count() + PermissionTasks.Count() + ReOrderTasks.Count(); }
         }
 
         public int SynchronizationTasksDoneCount
         {
-            get { return SynchronizationTasks.Where(t => t.IsDone).Count(); }
+            get { return PhotoTasks.Where(t => t.IsDone).Count() + PermissionTasks.Where(t=>t.IsDone).Count() + ReOrderTasks.Where(t => t.IsDone).Count(); }
         }
 
         public string SynchronizationProgressString
@@ -100,7 +102,7 @@ namespace FlickrDrive
 
         public void Stop()
         {
-            SynchronizationTasks.Clear();
+            PhotoTasks.Clear();
             foreach (var cancelAction in CancelActions)
             {
                 cancelAction();
@@ -118,7 +120,7 @@ namespace FlickrDrive
             FlickrData = new FlickrData();
             AllSynchroSets = new ObservableCollection<SynchroSet>();
             BindingOperations.EnableCollectionSynchronization(AllSynchroSets, sync);
-            SynchronizationTasks = new List<SynchronizeTask>();
+            PhotoTasks = new List<SynchronizeTask>();
         }
 
         public void Initialize()
@@ -138,7 +140,7 @@ namespace FlickrDrive
                 Authorize();
             }
             GetAccessToken();
-
+            
             Task.Run(() =>
             {
                 UpdateMeta();
@@ -218,39 +220,56 @@ namespace FlickrDrive
             {
                 IsSynchronizing = true;
 
-                //add all tasks to one queue
-                SynchronizationTasks.AddRange(PermissionTasks);
-                PermissionTasks.Clear();
-
-                while (SynchronizationTasks.Count(t => !t.IsDone && t.CurrentAttempt<Constants.MaxAttemptCount) > 0)
+                if(SynchronizeTasks(PhotoTasks))
                 {
-                    foreach (var synchronizationTask in SynchronizationTasks.Where(t=>!t.IsDone && t.CurrentAttempt < Constants.MaxAttemptCount))
-                    {
-                        OnPropertyChanged(nameof(SynchronizationTasksDoneCount));
-                        OnPropertyChanged(nameof(SynchronizationProgressString));
-                        try
-                        {
-                            synchronizationTask.Synchronize(this);
-                        }
-                        catch (Exception)
-                        {
+                    SynchronizeTasks(PermissionTasks);
+                    SynchronizeTasks(ReOrderTasks);
+                }                
 
-                        }
-                    }
-                }
-                
                 IsSynchronizing = false;
-                SynchronizationTasks.Clear();
+                PhotoTasks.Clear();
+                PermissionTasks.Clear();
+                ReOrderTasks.Clear();
+
                 UpdateMeta();
             });
 
         }
 
+        private int errorCounter = 0;
+        private bool SynchronizeTasks(List<SynchronizeTask> tasks)
+        {
+            while (tasks.Count(t => !t.IsDone && t.CurrentAttempt < Constants.MaxAttemptCount) > 0)
+            {
+                foreach (var synchronizationTask in tasks.Where(t => !t.IsDone && t.CurrentAttempt < Constants.MaxAttemptCount))
+                {
+                    OnPropertyChanged(nameof(SynchronizationTasksDoneCount));
+                    OnPropertyChanged(nameof(SynchronizationProgressString));
+                    try
+                    {
+                        synchronizationTask.Synchronize(this);
+                    }
+                    catch (Exception e)
+                    {
+                        errorCounter++;
+                        Debug.WriteLine($"{errorCounter} {e}");
+                    }
+                }
+            }
+
+            if (tasks.Any(t => !t.IsDone))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        
         public void UpdateMeta()
         {
             AllSynchroSets.Clear();
             //clear old
-            FlickrData.Sets = FlickrInstance.PhotosetsGetList();
+            FlickrData.Sets = FlickrInstance.PhotosetsGetList();           
             EnsureDirectoryExist(Root);
 
             var Directories = Directory.GetDirectories(Root);
@@ -302,11 +321,10 @@ namespace FlickrDrive
                 AllSynchroSets.Add(setx);
             }
 
-            OnPropertyChanged(nameof(TasksString));
-
+            TasksCountChanged();
         }
 
-        private List<Photo> GetAllPhotos(Photoset set)
+        public List<Photo> GetAllPhotos(Photoset set)
         {
             var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
             var photosList = photos.ToList();
@@ -349,23 +367,20 @@ namespace FlickrDrive
             var photos = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId);
             for (int i = 2; i <= Math.Ceiling((double)photos.Total / Constants.MaxPerPage); i++)
             {
-
                     var ph = FlickrInstance.PhotosetsGetPhotos(set.PhotosetId, PhotoSearchExtras.All,
                         PrivacyFilter.None, i,
                         Constants.MaxPerPage);
                     foreach (var p in ph)
                     {
                         photos.Add(p);
-                    }
-                
+                    }                
             }
-
             foreach (var file in localFiles)
             {
                 if (photos.FirstOrDefault(p => p.Title == Path.GetFileNameWithoutExtension(file)) == null)
                 {
                     var task = new UploadTask(file, set.PhotosetId, set.Title);
-                    SynchronizationTasks.Add(task);
+                    PhotoTasks.Add(task);
                 }
             }
             foreach (var photo in photos)
@@ -373,7 +388,7 @@ namespace FlickrDrive
                 if (localFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f) == photo.Title) == null)
                 {
                     var task = new DownloadTask(photo.PhotoId, directory, set.Title);
-                    SynchronizationTasks.Add(task);
+                    PhotoTasks.Add(task);
                 }
             }
 
@@ -402,8 +417,8 @@ namespace FlickrDrive
                 }
             });
 
-            SynchronizationTasks.Add(createAlbumTask);
-            SynchronizationTasks.AddRange(allFilesUp);
+            PhotoTasks.Add(createAlbumTask);
+            PhotoTasks.AddRange(allFilesUp);
         }
 
 
@@ -417,11 +432,8 @@ namespace FlickrDrive
 
         public void RemoveSynchronizationOfSet(SynchroSet synchroSet)
         {
-            SynchronizationTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Title);            
-            OnPropertyChanged(nameof(SynchronizationTasksCount));
-            OnPropertyChanged(nameof(TasksString));
-
-
+            PhotoTasks.RemoveAll(t => t.AlbumTitle == synchroSet.Title);            
+            TasksCountChanged();
         }
 
         public void Logout()
@@ -434,6 +446,26 @@ namespace FlickrDrive
             OnPropertyChanged(nameof(IsLoggedIn));
             Settings.Default.Save();
         }
+
+        public void AddReorderPhotosByDataTaken(SynchroSet synchroSet)
+        {
+            Action preSynchroAction = () =>
+            {
+                FlickrData.Sets = FlickrInstance.PhotosetsGetList();
+            };
+            ReOrderTasks.Add(new ActionTask(preSynchroAction, synchroSet.Title));
+            ReOrderTasks.Add(new OrderPhotosTask(synchroSet.Title));
+            TasksCountChanged();
+
+        }
+
+        public void RemoveReorderPhotosByDataTaken(SynchroSet synchroSet)
+        {
+            ReOrderTasks.RemoveAll(s => s.AlbumTitle == synchroSet.Title);
+            TasksCountChanged();
+
+        }
+
 
         public void AddPermToSynchroSet(SynchroSet synchroSet)
         {
@@ -456,7 +488,21 @@ namespace FlickrDrive
                 }
             });
             PermissionTasks.Add(new ActionTask(changePermissionAction, synchroSet.Title));
-            
+            TasksCountChanged();
+
+        }
+
+        public void ReorderSets()
+        {
+            if (!ReOrderTasks.Any(x => x is OrderSetsTask))
+            {
+                ReOrderTasks.Add(new OrderSetsTask());
+            }
+            TasksCountChanged();
+        }
+
+        private void TasksCountChanged()
+        {
             OnPropertyChanged(nameof(SynchronizationTasksCount));
             OnPropertyChanged(nameof(TasksString));
         }

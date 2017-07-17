@@ -100,6 +100,8 @@
     <Compile Include="Tasks\ActionTask.cs" />
     <Compile Include="Tasks\CreateAlbumTask.cs" />
     <Compile Include="Tasks\DownloadTask.cs" />
+    <Compile Include="Tasks\OrderPhotosTask.cs" />
+    <Compile Include="Tasks\OrderSetsTask.cs" />
     <Compile Include="Tasks\SynchronizeTask.cs" />
     <Compile Include="Tasks\UploadTask.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
