@@ -38,7 +38,7 @@ namespace FlickrDrive.ViewModel
             ////}
 
             SimpleIoc.Default.Register<MainViewModel>();
-            SimpleIoc.Default.Register<Alive>();
+            SimpleIoc.Default.Register<FlickrAlive>();
         }
 
         public MainViewModel Main

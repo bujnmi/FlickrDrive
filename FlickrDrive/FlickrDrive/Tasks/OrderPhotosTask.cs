@@ -11,7 +11,7 @@ namespace FlickrDrive.Tasks
         {
             AlbumTitle = albumTitle;
         }
-        public override void SynchronizeImplementation(Alive alive)
+        public override void SynchronizeImplementation(FlickrAlive alive)
         {
             var set = alive.FlickrData.Sets.First(s => s.Title == AlbumTitle);
             var photos = alive.GetAllPhotos(set);

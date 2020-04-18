@@ -9,14 +9,14 @@ namespace FlickrDrive.Tasks
 
         public virtual bool ContainsSynchronizationOfPhoto => false;
 
-        public void Synchronize(Alive alive)
+        public void Synchronize(FlickrAlive alive)
         {
             CurrentAttempt++;
             SynchronizeImplementation(alive);
             IsDone = true;
         }
 
-        public virtual void SynchronizeImplementation(Alive alive)
+        public virtual void SynchronizeImplementation(FlickrAlive alive)
         {
             
         }

@@ -10,7 +10,6 @@ namespace FlickrDrive.ViewModel
 {
     public class MainViewModel:INotifyPropertyChanged
     {
-        private readonly Alive _alive;
         private RelayCommand _openFolderCommand;
         private RelayCommand _synchronizeCommand;
         private RelayCommand _stopCommand;
@@ -18,18 +17,18 @@ namespace FlickrDrive.ViewModel
         private RelayCommand _changeRootCommand;
         private RelayCommand _logoutCommand;
         private RelayCommand _reorderSetsCommand;
-        public Alive Alive { get { return _alive; } }
+        public FlickrAlive flickrAlive { get; }
 
-        public MainViewModel(Alive alive)
+        public MainViewModel(FlickrAlive flickrAlive)
         {
-            _alive = alive;
-            _alive.Initialize();
-            _alive.PropertyChanged += OnAliveOnPropertyChanged;
+            this.flickrAlive = flickrAlive;
+            this.flickrAlive.Initialize();
+            this.flickrAlive.PropertyChanged += OnAliveOnPropertyChanged;
         }
 
         private void OnAliveOnPropertyChanged(object sender, PropertyChangedEventArgs args)
         {
-            if (args.PropertyName == nameof(Alive.IsLoggedIn))
+            if (args.PropertyName == nameof(flickrAlive.IsLoggedIn))
             {
                 OnPropertyChanged(nameof(LoginString));
             }
@@ -40,9 +39,9 @@ namespace FlickrDrive.ViewModel
             get
             {
                 string toReturn = "Login";
-                if (_alive.IsLoggedIn)
+                if (flickrAlive.IsLoggedIn)
                 {
-                    toReturn = $"Logout ({_alive.UserName})";
+                    toReturn = $"Logout ({flickrAlive.UserName})";
                 }
                 return toReturn;
             }
@@ -65,13 +64,13 @@ namespace FlickrDrive.ViewModel
         {
             Task.Run(() =>
             {
-                _alive.UpdateMeta();
+                flickrAlive.UpdateMeta();
             });
         }
 
         private void OpenFolder()
         {
-            Process.Start(_alive.Root);
+            Process.Start(flickrAlive.Root);
         }
 
 
@@ -93,13 +92,13 @@ namespace FlickrDrive.ViewModel
 
         private void LoginLogout()
         {
-            if (_alive.IsLoggedIn)
+            if (flickrAlive.IsLoggedIn)
             {
-                _alive.Logout();
+                flickrAlive.Logout();
             }
             else
             {
-                _alive.Initialize();
+                flickrAlive.Initialize();
             }
         }
 
@@ -113,7 +112,7 @@ namespace FlickrDrive.ViewModel
 
         private void Stop()
         {
-            _alive.Stop();
+            flickrAlive.Stop();
         }
 
         public RelayCommand ChangeRootCommand
@@ -138,18 +137,18 @@ namespace FlickrDrive.ViewModel
             dialog.IsFolderPicker = true;
             if (dialog.ShowDialog() == CommonFileDialogResult.Ok)
             {
-                _alive.Root = dialog.FileName;
+                flickrAlive.Root = dialog.FileName;
             }
         }
 
         private void Synchronize()
         {
-            _alive.Synchronize();
+            flickrAlive.Synchronize();
         }
 
         private void ReorderSets()
         {
-            _alive.ReorderSets();
+            flickrAlive.ReorderSets();
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

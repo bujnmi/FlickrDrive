@@ -11,7 +11,7 @@ namespace FlickrDrive.Tasks
             AlbumTitle = albumTitle;
             _a = a;
         }
-        public override void SynchronizeImplementation(Alive alive)
+        public override void SynchronizeImplementation(FlickrAlive alive)
         {
             _a?.Invoke();
         }

@@ -19,7 +19,7 @@ namespace FlickrDrive.Tasks
             AlbumTitle = albumTitle;
         }
 
-        public override void SynchronizeImplementation(Alive alive)
+        public override void SynchronizeImplementation(FlickrAlive alive)
         {
             string photoId;
             using (FileStream fs = new FileStream(primaryPhotoPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))

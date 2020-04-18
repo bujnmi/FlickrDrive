@@ -18,7 +18,7 @@ namespace FlickrDrive.Tasks
         }
 
 
-        public override void SynchronizeImplementation(Alive alive)
+        public override void SynchronizeImplementation(FlickrAlive alive)
         {
             var info = alive.FlickrInstance.PhotosGetInfo(photoId);
             

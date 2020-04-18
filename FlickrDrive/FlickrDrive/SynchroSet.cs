@@ -55,8 +55,8 @@ namespace FlickrDrive
         }
 
         public Photo PrimaryPhotoData;
-        private readonly Alive _alive;
-        public SynchroSet(string title, Alive alive)
+        private readonly FlickrAlive _alive;
+        public SynchroSet(string title, FlickrAlive alive)
         {
             Title = title;
             _alive = alive;
